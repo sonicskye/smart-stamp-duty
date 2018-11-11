@@ -679,7 +679,7 @@ contract StampDuty is Ownable, ERC20Pausable {
 }
 
 /**
- * @title Silkroad Eight Token
+ * @title Smart Stamp Duty
  * @dev ERC20 Tokens
  */
 contract SmartStampDuty is StampDuty {
