@@ -563,6 +563,21 @@ contract StampDuty is Ownable, ERC20Pausable {
     }
     
     /**
+     * @dev getStampList returns StampList
+     */
+    function getStampList() public constant returns (bytes32[]) {
+        return StampList;
+    }
+    
+    /**
+     * @dev getStampPayCodes returns PayCode array
+     * @dev can be used to list all payments of a stamp, determined by stampCode
+     */
+    function getStampPayCodes(bytes32 stampCode) public constant returns (bytes32[]) {
+        return StampStructs[stampCode].PayCode;
+    }
+    
+    /**
      * @dev getStampDetail gets the detail of stamp data based on StampCode
      * @dev reference: https://medium.com/coinmonks/solidity-tutorial-returning-structs-from-public-functions-e78e48efb378
      * @dev returns the structure of StampParam
@@ -617,6 +632,13 @@ contract StampDuty is Ownable, ERC20Pausable {
      */
     function getPaymentCount() public constant returns (uint paymentCount) {
         return PayList.length;
+    }
+    
+    /**
+     * @dev getPayList returns PayList array
+     */
+    function getPayList() public constant returns (bytes32[]) {
+        return PayList;
     }
     
     /**
