@@ -541,10 +541,7 @@ contract StampDuty is Ownable, ERC20Pausable {
     * @param PayIndex is the index of the payment
     * @param Payer is the address of the Payer
     * @param StampIndex refers to the StampParam
-    * @Todo add Bloom Filter (BF) to test if a printed document is identical to the electronic version
-    * @Todo the test against the BF is by sampling the words on the document
-    * @Todo can be as an opt-in feature to be activated by the user in case they want to print it later
-    * @Todo initially, the user needs to convert the document into characters
+    * @param BloomFilter is used to test the similarity between the original document (hashed one) and the claimed document (printed or electronic document)
     */ 
     struct PayParam {
         bytes32 PayCode;
@@ -552,6 +549,7 @@ contract StampDuty is Ownable, ERC20Pausable {
         uint256 PayIndex;
         address Payer;
         bytes32 StampCode;
+        string BloomFilter;
     }
     
     mapping (bytes32 => PayParam) PayStructs;
@@ -622,6 +620,17 @@ contract StampDuty is Ownable, ERC20Pausable {
     }
     
     /**
+     * @dev getPaymentDetail gets the detail of payment data based on PayCode
+     * @dev reference: https://medium.com/coinmonks/solidity-tutorial-returning-structs-from-public-functions-e78e48efb378
+     * @dev returns the structure of PayParam
+     */
+    function getPaymentDetail(bytes32 payCode) public constant returns (bytes32 PayCode, string DocHash, uint256 PayIndex, 
+        address Payer, bytes32 StampCode, string BloomFilter) {
+        PayParam memory p = PayStructs[payCode];
+        return (p.PayCode, p.DocHash, p.PayIndex, p.Payer, p.StampCode, p.BloomFilter);
+    }
+    
+    /**
      * @dev isStamp checks if the stamp is valid
      */
     function isStamp (bytes32 stampCode) public constant returns (bool isIndeed) {
@@ -684,7 +693,7 @@ contract StampDuty is Ownable, ERC20Pausable {
     /**
      * @dev createPayment creates a new payment
      */
-    function createPayment(bytes32 payCode, string docHash, bytes32 stampCode) public returns (bool success) {
+    function createPayment(bytes32 payCode, string docHash, bytes32 stampCode, string bloomFilter) public returns (bool success) {
         //prevent duplicate
         require(!isPayment(payCode));
         //check referential integrity for stampCode
@@ -707,12 +716,15 @@ contract StampDuty is Ownable, ERC20Pausable {
         uint256 PayIndex;
         address Payer;
         bytes32 StampCode;
+        string BloomFilter;
          */
         PayStructs[payCode].PayCode = payCode;
         PayStructs[payCode].DocHash = docHash;
         PayStructs[payCode].PayIndex = PayList.push(payCode) - 1;
         PayStructs[payCode].Payer = msg.sender;
         PayStructs[payCode].StampCode = stampCode;
+        PayStructs[payCode].BloomFilter = bloomFilter;
+        
         //maintain new payment in Stamp data
         StampStructs[stampCode].PayIndexPointers[payCode] = StampStructs[stampCode].PayCode.push(payCode) - 1;
         /**
