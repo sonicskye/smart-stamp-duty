@@ -510,6 +510,7 @@ contract StampDuty is Ownable, ERC20Pausable {
     * @param StampName is the name of the stamp in human readable format
     * @param StampPrice is the price of the stamp, in integer
     * @param RegulationReference is the reference to a specific tax regulation
+    * @param StampIndex is the index or position of the data
     */  
     struct StampParam {
         bytes32 StampCode;
@@ -517,6 +518,7 @@ contract StampDuty is Ownable, ERC20Pausable {
         uint32 StampPrice;
         string RegulationReference;
         uint StampIndex;
+        bool IsActive;
         /**
          * @dev To support deletion and keeps the referential integrity
          * @param PayParamDocHash is to refer to Document hash
@@ -556,6 +558,56 @@ contract StampDuty is Ownable, ERC20Pausable {
      */
     function getStampCount() public constant returns (uint stampCount) {
         return StampList.length;
+    }
+    
+    /**
+     * @dev getStampDetail gets the detail of stamp data based on StampCode
+     * @dev reference: https://medium.com/coinmonks/solidity-tutorial-returning-structs-from-public-functions-e78e48efb378
+     * @dev returns the structure of StampParam
+     */
+    function getStampDetail(bytes32 stampCode) public constant returns (bytes32 StampCode, string StampName, uint32 StampPrice, 
+        string RegulationReference, uint StampIndex, bool isActive) {
+        StampParam memory s = StampStructs[stampCode];
+        return (s.StampCode, s.StampName, s.StampPrice, s.RegulationReference, s.StampIndex, s.IsActive);
+    }
+    
+    /**
+     * @dev getStampDetailByIndex gets the detail of stamp data based on its index
+     * @dev reference: https://medium.com/coinmonks/solidity-tutorial-returning-structs-from-public-functions-e78e48efb378
+     * @dev returns the structure of StampParam
+     */
+    function getStampDetailByIndex(uint stampIndex) public constant returns (bytes32 StampCode, string StampName, uint32 StampPrice, 
+        string RegulationReference, uint StampIndex, bool isActive) {
+        // get the StampCode first
+        bytes32 stampCode = StampList[stampIndex];
+        StampParam memory s = StampStructs[stampCode];
+        return (s.StampCode, s.StampName, s.StampPrice, s.RegulationReference, s.StampIndex, s.IsActive);
+    }
+    
+    /**
+     * @dev stampActivate activates the stamp described by stampCode
+     * @dev onlyOwner
+     */
+    function stampActivate(bytes32 stampCode) public onlyOwner returns (bool success) {
+        // check if it is a valid stamp
+        require(isStamp(stampCode));
+        // check if stamp is currently deactivated
+        require(StampStructs[stampCode].IsActive == false);
+        StampStructs[stampCode].IsActive = true;
+        return true;
+    }
+    
+    /**
+     * @dev stampDeactivate deactivates the stamp described by stampCode
+     * @dev onlyOwner
+     */
+    function stampDeactivate(bytes32 stampCode) public onlyOwner returns (bool success) {
+        // check if it is a valid stamp
+        require(isStamp(stampCode));
+        // check if stamp is currently activated
+        require(StampStructs[stampCode].IsActive == true);
+        StampStructs[stampCode].IsActive = false;
+        return true;
     }
     
     /**
@@ -601,7 +653,7 @@ contract StampDuty is Ownable, ERC20Pausable {
     /**
      * @dev createStamp creates a new stamp, only owner can do this
      */
-    function createStamp(bytes32 stampCode, string stampName, uint32 stampPrice, string regulationReference) public onlyOwner returns (bool success) {
+    function createStamp(bytes32 stampCode, string stampName, uint32 stampPrice, string regulationReference, bool isActive) public onlyOwner returns (bool success) {
         //prevent duplicate
         require(!isStamp(stampCode));
         //add new data
@@ -617,6 +669,7 @@ contract StampDuty is Ownable, ERC20Pausable {
         StampStructs[stampCode].StampPrice = stampPrice;
         StampStructs[stampCode].RegulationReference = regulationReference;
         StampStructs[stampCode].StampIndex = StampList.push(stampCode) - 1;
+        StampStructs[stampCode].IsActive = isActive;
         
         /**
          * @Todo should add Event here
@@ -632,6 +685,8 @@ contract StampDuty is Ownable, ERC20Pausable {
         require(!isPayment(payCode));
         //check referential integrity for stampCode
         require(isStamp(stampCode));
+        //stamp needs to be active
+        require(StampStructs[stampCode].IsActive == true);
         //check payCode cannot empty
         require(payCode.length > 0);
         //check dochHash cannot empty
@@ -679,7 +734,7 @@ contract StampDuty is Ownable, ERC20Pausable {
 }
 
 /**
- * @title Smart Stamp Duty
+ * @title Smart Stamp Duty Token
  * @dev ERC20 Tokens
  */
 contract SmartStampDuty is StampDuty {
