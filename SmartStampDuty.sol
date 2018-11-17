@@ -541,6 +541,10 @@ contract StampDuty is Ownable, ERC20Pausable {
     * @param PayIndex is the index of the payment
     * @param Payer is the address of the Payer
     * @param StampIndex refers to the StampParam
+    * @Todo add Bloom Filter (BF) to test if a printed document is identical to the electronic version
+    * @Todo the test against the BF is by sampling the words on the document
+    * @Todo can be as an opt-in feature to be activated by the user in case they want to print it later
+    * @Todo initially, the user needs to convert the document into characters
     */ 
     struct PayParam {
         bytes32 PayCode;
