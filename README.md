@@ -8,3 +8,7 @@ Please note that the script has not undergone any security audit.
 
 # USAGE
 Truffle is needed to run the entire scripts.
+
+## Contributors
+@sonicskye
+@fengkiej
