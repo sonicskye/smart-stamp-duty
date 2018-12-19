@@ -5,3 +5,6 @@ The SSD is a Proof-of-Concept of our paper.
 
 # SECURITY
 Please note that the script has not undergone any security audit.
+
+# USAGE
+Truffle is needed to run the entire scripts.
